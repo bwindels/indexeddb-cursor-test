@@ -1,0 +1,99 @@
+<!DOCTYPE>
+<html>
+	<head>
+		<style>
+			#persons {
+				position: absolute;
+				bottom: 100px;
+				top: 30px;
+				left: 0;
+				width: 400px;
+				background-color: grey;
+				overflow-y: auto;
+				overflow-x: hidden;
+				list-style: none;
+				padding:0;
+				margin:0;
+			}
+
+			#persons > li {
+				padding: 10px;
+			}
+
+			#persons > li:nth-child(odd) {
+				background-color: lightgrey;
+			}
+
+			#buttons {
+				position: absolute;
+				bottom: 0;
+				right: 0;
+				left: 0;
+				height: 100px;
+				background-color: red;
+			}
+		</style>
+	</head>
+	<body>
+		<p id="count"></p>
+		<ul id="persons">
+
+		</ul>
+		<div id="buttons">
+			<button id="write">Write 10000 Persons</button>
+			<button id="read">Read all Persons</button>
+		</div>
+		<script src="person.js"></script>
+		<script src="idb.js"></script>
+		<script>
+			var personsNode = document.getElementById('persons');
+			var countNode = document.getElementById('count');
+			var writeButton = document.getElementById('write');
+			var readButton = document.getElementById('read');
+
+			idb.open(function(err, store) {
+				if(err) {
+					console.error(err);	
+					return alert('could not open idb:' + err.message);
+				}
+
+				writeButton.addEventListener('click', function() {
+					alert('starting writing!');
+					var it = new PersonIterator(20);
+					store.writePeople(it, function(err) {
+						if(err) {
+							console.error(err.stack);
+							return alert('could not write persons:' + err.message);
+						}
+						alert('stored!');
+					});
+				});
+
+				readButton.addEventListener('click', function() {
+					personsNode.innerHTML = '';
+
+					store.readPeople(0, 100,
+						function(err, count) {
+							if(err) {
+								console.error(err.stack);
+								return alert('could not count persons:' + err.message);
+							}
+							countNode.innerHTML =  count + ' persons in total';
+						}, function(err, person) {
+							if(err) {
+								console.error(err.stack);
+								return alert('could not read persons:' + err.message);
+							}
+							
+							var li = document.createElement('li');
+							li.innerHTML = person.name + ' ' + person.lastname + ' (' + person.birthday.year + ')';
+							personsNode.appendChild(li);
+						}
+					);
+				});
+
+			});
+			
+		</script>
+	</body>
+</html>
